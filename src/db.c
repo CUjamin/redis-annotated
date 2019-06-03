@@ -376,9 +376,11 @@ long long emptyDb(int dbnum, int flags, void(callback)(void*)) {
     return removed;
 }
 
+/* 切换数据库 */
 int selectDb(client *c, int id) {
     if (id < 0 || id >= server.dbnum)
         return C_ERR;
+    /* client.db = redisServer.db[id] */
     c->db = &server.db[id];
     return C_OK;
 }
