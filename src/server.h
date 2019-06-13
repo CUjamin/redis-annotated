@@ -636,7 +636,7 @@ typedef struct clientReplyBlock {
 /* 对应一个数据库 */
 typedef struct redisDb {
     dict *dict;                 /* dict字典，保存数据库中的所有键值对  *//* The keyspace for this DB */
-    dict *expires;              /* Timeout of keys with a timeout set */
+    dict *expires;              /* 有效时间 Timeout of keys with a timeout set */
     dict *blocking_keys;        /* Keys with clients waiting for data (BLPOP)*/
     dict *ready_keys;           /* Blocked keys that received a PUSH */
     dict *watched_keys;         /* WATCHED keys for MULTI/EXEC CAS */
@@ -798,25 +798,28 @@ struct sharedObjectsStruct {
 };
 
 /* ZSETs use a specialized version of Skiplists */
+/* 跳跃表节点 */
 typedef struct zskiplistNode {
-    sds ele;
-    double score;
-    struct zskiplistNode *backward;
-    struct zskiplistLevel {
-        struct zskiplistNode *forward;
-        unsigned long span;
+    sds ele;                                /* 成员对象     各个节点的 oN 是节点保存的成员对象  */
+    double score;                           /* 分值         跳跃表中，节点按照各自保存的分值从小到大排序*/
+    struct zskiplistNode *backward;         /* 后退指针     指向前一个节点*/
+
+    struct zskiplistLevel {                 /* 层  */
+        struct zskiplistNode *forward;          /* 前进指针 指向表尾方向的其他节点*/
+        unsigned long span;                     /* 跨度     当前节点与前进指针指向的节点间的距离*/
     } level[];
 } zskiplistNode;
-
+/* 跳跃表 */
 typedef struct zskiplist {
-    struct zskiplistNode *header, *tail;
-    unsigned long length;
-    int level;
+    struct zskiplistNode *header, *tail;    /*  头节点指针，
+                                                尾节点指针 */
+    unsigned long length;                   /* 目前表内，层次最大的那个节点的层数（表头节点层次数除外） */
+    int level;                              /* 跳跃表长度，即节点数量（不包含表头节点） */
 } zskiplist;
-
+/* ZSET  使用字段和跳跃表*/
 typedef struct zset {
-    dict *dict;
-    zskiplist *zsl;
+    dict *dict;                             /*  字段 */
+    zskiplist *zsl;                         /*  跳跃表 */
 } zset;
 
 typedef struct clientBufferLimitsConfig {
