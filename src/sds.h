@@ -130,7 +130,7 @@ static inline size_t sdsavail(const sds s) {
     return 0;
 }
 
-/* 更新SDS s 的长度 */
+/* 更新SDS s  的长度 */
 static inline void sdssetlen(sds s, size_t newlen) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
