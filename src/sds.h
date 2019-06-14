@@ -84,8 +84,10 @@ struct __attribute__ ((__packed__)) sdshdr64 {
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
 
+/* 返回SDS的已使用的空间字节数 , O(1) , 通过读取SDS的len属性直接获取 */
 static inline size_t sdslen(const sds s) {
-    unsigned char flags = s[-1];
+    unsigned char flags = s[-1];            /* sds的指针指向的是真正数据开始的地方（字符数组）
+                                            利用下标为负数来获取flags的地址 */
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
             return SDS_TYPE_5_LEN(flags);
@@ -101,6 +103,7 @@ static inline size_t sdslen(const sds s) {
     return 0;
 }
 
+/* 返回SDS的未使用空间字节数 ，O(1) , 通过读取SDS的 alloc 和 len 属性相减获取 */
 static inline size_t sdsavail(const sds s) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
@@ -127,6 +130,7 @@ static inline size_t sdsavail(const sds s) {
     return 0;
 }
 
+/* 更新SDS s 的长度 */
 static inline void sdssetlen(sds s, size_t newlen) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {

@@ -600,14 +600,21 @@ typedef struct RedisModuleDigest {
 #define LRU_CLOCK_RESOLUTION 1000 /* LRU clock resolution in ms */
 
 #define OBJ_SHARED_REFCOUNT INT_MAX
+/* Redis对象 
+   Redis有两种对象：键对象        总是字符串对象
+                  值对象        值对象及Redis类型结构： 字符串对象      REDIS_STRING
+                                                    列表对象        REDIS_LIST
+                                                    哈希对象        REDIS_HASH
+                                                    集合对象        REDIS_SET
+                                                    有序集合对象     REDIS_ZSET */
 typedef struct redisObject {
-    unsigned type:4;
-    unsigned encoding:4;
+    unsigned type:4;        /* 类型 */
+    unsigned encoding:4;    /* 编码 */
     unsigned lru:LRU_BITS; /* LRU time (relative to global lru_clock) or
                             * LFU data (least significant 8 bits frequency
                             * and most significant 16 bits access time). */
-    int refcount;
-    void *ptr;
+    int refcount;           /*  */
+    void *ptr;              /* 指向底层实现数据结构的指针 */
 } robj;
 
 /* Macro used to initialize a Redis object allocated on the stack.
