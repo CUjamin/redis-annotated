@@ -38,6 +38,7 @@
  * by the user before to call AlFreeList().
  *
  * On error, NULL is returned. Otherwise the pointer to the new list. */
+/* 创建一个新链表， */
 list *listCreate(void)
 {
     struct list *list;
@@ -53,6 +54,7 @@ list *listCreate(void)
 }
 
 /* Remove all the elements from the list without destroying the list itself. */
+/*  清空链表数据 ，但不进行链表的销毁 */
 void listEmpty(list *list)
 {
     unsigned long len;
@@ -73,6 +75,7 @@ void listEmpty(list *list)
 /* Free the whole list.
  *
  * This function can't fail. */
+/* 释放整个链表 */
 void listRelease(list *list)
 {
     listEmpty(list);
@@ -247,6 +250,7 @@ listNode *listNext(listIter *iter)
  * the original node is used as value of the copied node.
  *
  * The original list both on success or error is never modified. */
+/* 复制一个给定链表的副本 */
 list *listDup(list *orig)
 {
     list *copy;
@@ -327,6 +331,7 @@ listNode *listIndex(list *list, long index) {
 }
 
 /* Rotate the list removing the tail node and inserting it to the head. */
+/* 将链表的尾节点弹出，添加到表头位置 */
 void listRotate(list *list) {
     listNode *tail = list->tail;
 
@@ -344,6 +349,7 @@ void listRotate(list *list) {
 
 /* Add all the elements of the list 'o' at the end of the
  * list 'l'. The list 'other' remains empty but otherwise valid. */
+/* 将 链表o 接到 链表l 的尾部 ，并将 链表o 清空 */
 void listJoin(list *l, list *o) {
     if (o->head)
         o->head->prev = l->tail;

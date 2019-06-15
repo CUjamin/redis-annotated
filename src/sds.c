@@ -167,7 +167,7 @@ sds sdsdup(const sds s) {
 }
 
 /* Free an sds string. No operation is performed if 's' is NULL. */
-/* 释放给定的SDS ,O(N),N为被释放的SDS的长度*/
+/* 释放给定的SDS , O(N) , N为被释放的SDS的长度*/
 void sdsfree(sds s) {
     if (s == NULL) return;
     s_free((char*)s-sdsHdrSize(s[-1]));
@@ -197,7 +197,7 @@ void sdsupdatelen(sds s) {
  * However all the existing buffer is not discarded but set as free space
  * so that next append operations will not require allocations up to the
  * number of bytes previously available. */
-/* 清空SDS保存的字符串内容 */
+/* 清空SDS保存的字符串内容 惰性释放 O(N)*/
 void sdsclear(sds s) {
     /* 将SDS s的 长度更新为 0 ，即为清空 */
     sdssetlen(s, 0);
@@ -381,6 +381,7 @@ void sdsIncrLen(sds s, ssize_t incr) {
  *
  * if the specified length is smaller than the current length, no operation
  * is performed. */
+/* 用空字符串将SDS扩展至指定长度    O(N)    N为扩展新增的字节数 */
 sds sdsgrowzero(sds s, size_t len) {
     size_t curlen = sdslen(s);
 
@@ -431,7 +432,9 @@ sds sdscatsds(sds s, const sds t) {
 
 /* Destructively modify the sds string 's' to hold the specified binary
  * safe string pointed by 't' of length 'len' bytes. */
+/*  */
 sds sdscpylen(sds s, const char *t, size_t len) {
+    /* 如果当前SDS的总长度小于len，需要进行增加内存空间，增加的大小为 len-sdslen(s) */
     if (sdsalloc(s) < len) {
         s = sdsMakeRoomFor(s,len-sdslen(s));
         if (s == NULL) return NULL;
@@ -444,6 +447,7 @@ sds sdscpylen(sds s, const char *t, size_t len) {
 
 /* Like sdscpylen() but 't' must be a null-termined string so that the length
  * of the string is obtained with strlen(). */
+/* 将给定的C字符串复制到SDS里面，覆盖SDS原有的字符串    O(N)    N为被复制C字符串的长度 */
 sds sdscpy(sds s, const char *t) {
     return sdscpylen(s, t, strlen(t));
 }
@@ -704,11 +708,12 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
  * Example:
  *
  * s = sdsnew("AA...AA.a.aa.aHelloWorld     :::");
- * s = sdstrim(s,"Aa. :");
+ * s = sdstrim(s,"Aa. :");          从“AA...AA.a.aa.aHelloWorld     :::中移除 ‘A’、 ‘a’、 ‘.’、 ’ ‘、 ’:‘
  * printf("%s\n", s);
  *
  * Output will be just "HelloWorld".
  */
+/*  O(M*N) M为SDS长度，N为C字符串长度 */
 sds sdstrim(sds s, const char *cset) {
     char *start, *end, *sp, *ep;
     size_t len;
@@ -738,8 +743,9 @@ sds sdstrim(sds s, const char *cset) {
  * Example:
  *
  * s = sdsnew("Hello World");
- * sdsrange(s,1,-1); => "ello World"
+ * sdsrange(s,1,-1); => "ello World"  保留1开始的数据
  */
+/* 保留SDS给定区间内的数据，不在区间内的数据会被清除    O(N)    N为被保留数据的字节数   */
 void sdsrange(sds s, ssize_t start, ssize_t end) {
     size_t newlen, len = sdslen(s);
 
@@ -793,6 +799,7 @@ void sdstoupper(sds s) {
  * If two strings share exactly the same prefix, but one of the two has
  * additional characters, the longer string is considered to be greater than
  * the smaller one. */
+/* 比较两个SDS是否相等      O(N),   N为两个SDS中较短的SDS长度 */
 int sdscmp(const sds s1, const sds s2) {
     size_t l1, l2, minlen;
     int cmp;

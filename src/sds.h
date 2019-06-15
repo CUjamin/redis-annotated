@@ -73,13 +73,13 @@ struct __attribute__ ((__packed__)) sdshdr64 {
     char buf[];
 };
 
-#define SDS_TYPE_5  0
-#define SDS_TYPE_8  1
-#define SDS_TYPE_16 2
-#define SDS_TYPE_32 3
-#define SDS_TYPE_64 4
-#define SDS_TYPE_MASK 7
-#define SDS_TYPE_BITS 3
+#define SDS_TYPE_5  0   /* */
+#define SDS_TYPE_8  1   /* */
+#define SDS_TYPE_16 2   /* */
+#define SDS_TYPE_32 3   /* */
+#define SDS_TYPE_64 4   /* */
+#define SDS_TYPE_MASK 7 /* */
+#define SDS_TYPE_BITS 3 /* */
 #define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (void*)((s)-(sizeof(struct sdshdr##T)));
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
@@ -155,6 +155,7 @@ static inline void sdssetlen(sds s, size_t newlen) {
     }
 }
 
+/*  */
 static inline void sdsinclen(sds s, size_t inc) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
@@ -198,6 +199,7 @@ static inline size_t sdsalloc(const sds s) {
     return 0;
 }
 
+/*  */
 static inline void sdssetalloc(sds s, size_t newlen) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
