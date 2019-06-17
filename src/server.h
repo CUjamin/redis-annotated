@@ -610,10 +610,12 @@ typedef struct RedisModuleDigest {
 typedef struct redisObject {
     unsigned type:4;        /* 类型 */
     unsigned encoding:4;    /* 编码 */
-    unsigned lru:LRU_BITS; /* LRU time (relative to global lru_clock) or
+    unsigned lru:LRU_BITS; /* lru 最后一次被命令程序访问的时间（空转时间）
+                                
+                              LRU time (relative to global lru_clock) or
                             * LFU data (least significant 8 bits frequency
                             * and most significant 16 bits access time). */
-    int refcount;           /*  */
+    int refcount;           /* 引用计数（用于内存回收） */
     void *ptr;              /* 指向底层实现数据结构的指针 */
 } robj;
 
@@ -643,7 +645,7 @@ typedef struct clientReplyBlock {
 /* 对应一个数据库 */
 typedef struct redisDb {
     dict *dict;                 /* dict字典，保存数据库中的所有键值对  *//* The keyspace for this DB */
-    dict *expires;              /* 有效时间 Timeout of keys with a timeout set */
+    dict *expires;              /* 过期字典，保存这键的过期时间 Timeout of keys with a timeout set */
     dict *blocking_keys;        /* Keys with clients waiting for data (BLPOP)*/
     dict *ready_keys;           /* Blocked keys that received a PUSH */
     dict *watched_keys;         /* WATCHED keys for MULTI/EXEC CAS */
@@ -717,7 +719,7 @@ typedef struct readyList {
 
 /* With multiplexing we need to take per-client state.
  * Clients are taken in a linked list. */
-/*记录客户端状态*/
+/*记录客户端状态 ，原 redisClient */
 typedef struct client {
     uint64_t id;            /* Client incremental unique ID. */
     int fd;                 /* Client socket. */
@@ -777,9 +779,13 @@ typedef struct client {
     char buf[PROTO_REPLY_CHUNK_BYTES];
 } client;
 
+/*  RDB 设置参数
+    save 900 1
+    save 300 10
+    save 60  10000 */
 struct saveparam {
-    time_t seconds;
-    int changes;
+    time_t seconds;         /* 秒数 */
+    int changes;            /* 修改数 */
 };
 
 struct moduleLoadQueueEntry {
@@ -812,8 +818,8 @@ typedef struct zskiplistNode {
     struct zskiplistNode *backward;         /* 后退指针     指向前一个节点*/
 
     struct zskiplistLevel {                 /* 层  */
-        struct zskiplistNode *forward;          /* 前进指针 指向表尾方向的其他节点*/
-        unsigned long span;                     /* 跨度     当前节点与前进指针指向的节点间的距离*/
+        struct zskiplistNode *forward;      /* 前进指针 指向表尾方向的其他节点*/
+        unsigned long span;                 /* 跨度     当前节点与前进指针指向的节点间的距离*/
     } level[];
 } zskiplistNode;
 /* 跳跃表 */
@@ -823,9 +829,9 @@ typedef struct zskiplist {
     unsigned long length;                   /* 目前表内，层次最大的那个节点的层数（表头节点层次数除外） */
     int level;                              /* 跳跃表长度，即节点数量（不包含表头节点） */
 } zskiplist;
-/* ZSET  使用字段和跳跃表*/
+/* ZSET  使用字段和跳跃表：有序表，当元素数量>=128,或者元素长度存在>=64字节时，有序表使用zset保存*/
 typedef struct zset {
-    dict *dict;                             /*  字段 */
+    dict *dict;                             /*  字典 */
     zskiplist *zsl;                         /*  跳跃表 */
 } zset;
 
@@ -1076,7 +1082,7 @@ struct redisServer {
     int aof_rewrite_scheduled;      /* Rewrite once BGSAVE terminates. */
     pid_t aof_child_pid;            /* PID if rewriting process */
     list *aof_rewrite_buf_blocks;   /* Hold changes during an AOF rewrite. */
-    sds aof_buf;      /* AOF buffer, written before entering the event loop */
+    sds aof_buf;      /* AOF缓冲区 AOF buffer, written before entering the event loop */
     int aof_fd;       /* File descriptor of currently selected AOF file */
     int aof_selected_db; /* Currently selected DB in AOF */
     time_t aof_flush_postponed_start; /* UNIX time of postponed AOF flush */
@@ -1102,15 +1108,15 @@ struct redisServer {
                                       to child process. */
     sds aof_child_diff;             /* AOF diff accumulator child side. */
     /* RDB persistence */
-    long long dirty;                /* Changes to DB from the last save */
+    long long dirty;                /* 修改计数器 Changes to DB from the last save */
     long long dirty_before_bgsave;  /* Used to restore dirty on failed BGSAVE */
     pid_t rdb_child_pid;            /* PID of RDB saving child */
-    struct saveparam *saveparams;   /* Save points array for RDB */
+    struct saveparam *saveparams;   /* RDB 配置数组 Save points array for RDB */
     int saveparamslen;              /* Number of saving points */
     char *rdb_filename;             /* Name of RDB file */
     int rdb_compression;            /* Use compression in RDB? */
     int rdb_checksum;               /* Use RDB checksum? */
-    time_t lastsave;                /* Unix time of last successful save */
+    time_t lastsave;                /* 上一次执行保存的时间 Unix time of last successful save */
     time_t lastbgsave_try;          /* Unix time of last attempted bgsave */
     time_t rdb_save_time_last;      /* Time used by last RDB save run. */
     time_t rdb_save_time_start;     /* Current RDB save start time. */
