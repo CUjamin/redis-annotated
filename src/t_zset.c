@@ -121,7 +121,7 @@ void zslFree(zskiplist *zsl) {
  * The return value of this function is between 1 and ZSKIPLIST_MAXLEVEL
  * (both inclusive), with a powerlaw-alike distribution where higher
  * levels are less likely to be returned. */
-/* 随机数生成器 最大为64 ，ZSKIPLIST_P=0.25 */
+/* 随机数生成器 范围[1，64] ，ZSKIPLIST_P=0.25 ,random()>=0.25时（期望为4/3），停止增加层数*/
 int zslRandomLevel(void) {
     int level = 1;
     while ((random()&0xFFFF) < (ZSKIPLIST_P * 0xFFFF))
